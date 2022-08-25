@@ -5,7 +5,7 @@ from typing import Any, Callable, NoReturn, Optional
 class Queue(ABC):
 
     @abstractmethod
-    def __init__(self, initial_queue: Optional[list] = None):
+    def __init__(self, initial_queue: Optional[list[Any]] = None):
         """
         Initialize a new queue, either empty or with an initial number of elements.
 
