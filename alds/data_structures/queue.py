@@ -1,6 +1,7 @@
 """Module containing queue data structures, such as FIFO, LIFO, and priority queues."""
 
 from typing import Any, Callable, Optional, NoReturn
+import heapq
 from .abc import Queue
 
 
@@ -78,6 +79,67 @@ class LIFOQueue(Queue):
     @property
     def top(self) -> Any:
         return self._data[-1]
+
+    @property
+    def is_empty(self) -> bool:
+        return len(self._data) == 0
+
+
+class PriorityQueue(Queue):
+    """A queue data structure with a highest-priority-first-out (HPFO) policy, also known as a
+    priority queue."""
+
+    def __init__(self, initial_queue: Optional[list[tuple[Any, float]]] = None):
+        self._counter = 0
+        self._data = []
+        if isinstance(initial_queue, list):
+            for element, priority in initial_queue:
+                self.push(element, priority)
+        return
+
+    def __str__(self):
+        elems = [(e[2], (int(e[0]) if int(e[0])==e[0] else e[0])) for e in self._data]
+        elems.sort(key=lambda e: e[1])
+        return str(elems)
+
+    def push(self, element: Any, priority: float = 0) -> NoReturn:
+        entry = (priority, self._counter, element)
+        heapq.heappush(self._data, entry)
+        self._counter += 1
+        return
+
+    def pop(self, return_priority: bool = False) -> Any:
+        priority, counter, element = heapq.heappop(self._data)
+        if return_priority:
+            return element, priority
+        return element
+
+    def has_element(self, element: Any, key: Callable = lambda elem: elem) -> bool:
+        for priority, counter, elem in self._data:
+            if key(elem) == element:
+                return True
+        return False
+
+    def update(self, element: Any, priority: float):
+        """Update the queue with a given element.
+        If the element is already in priority queue with a higher priority, update its priority
+        and rebuild the heap. If the element in the queue has an equal or lower priority,
+        do nothing. Otherwise, if element is not in the queue, push the element into the queue.
+        """
+        for index, (prio, count, elem) in enumerate(self._data):
+            if elem == element:
+                if prio <= priority:
+                    break
+                del self._data[index]
+                self._data.append((priority, count, element))
+                heapq.heapify(self._data)
+                break
+        else:
+            self.push(element, priority)
+
+    @property
+    def top(self, return_priority: bool = False) -> Any:
+        raise NotImplementedError
 
     @property
     def is_empty(self) -> bool:
