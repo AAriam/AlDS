@@ -27,9 +27,7 @@ class Stack:
         return
 
     def __str__(self):
-        elements = self._data.copy()
-        elements.reverse()
-        return [str(elem) for elem in elements]
+        return ", ".join([str(elem) for elem in self._data[-1::-1]])
 
     def push(self, element: Any) -> None:
         """Add a new element to the stack."""
