@@ -1,20 +1,24 @@
-from typing import Any, List, Tuple
+"""Module containing all abstract base classes for search algorithms."""
+
+from abc import ABC, abstractmethod
+from collections.abc import Iterable, Iterator
+from typing import Any
 
 
-class SearchProblem:
+class SearchProblem(ABC):
     """
     This class outlines the structure of a search problem, but doesn't implement
     any of the methods (in object-oriented terminology: an abstract class).
     """
 
     @property
-    def start_state(self) -> Any:
-        """
-        The start state of the search problem.
-        """
-        raise NotImplementedError
+    @abstractmethod
+    def init_state(self) -> Any:
+        """The initial state of the search problem."""
+        ...
 
-    def is_goal(self, state: Any) -> bool:
+    @abstractmethod
+    def is_goal_state(self, state: Any) -> bool:
         """
         Whether a given state is a goal state.
 
@@ -28,54 +32,64 @@ class SearchProblem:
         bool
             True if the state is a valid goal state, otherwise False.
         """
-        raise NotImplementedError
+        ...
 
-    def successors(self, state: Any) -> List[Tuple]:
+    @abstractmethod
+    def actions(self, state: Any) -> Iterable[Any]:
         """
-          state: Search state
+        Given a state, return a list of actions that can be executed in that state.
+        """
+        ...
+
+    @abstractmethod
+    def result(self, state: Any, action: Any) -> Any:
+        """
+        Given a state and an action executable in that state, return the resulting state.
+        """
+        ...
+
+    @abstractmethod
+    def cost_action(self, start_state, action, end_state) -> float:
+        """
+        Return the numeric cost of applying the `action` in `start_state` to reach `end_state`.
+        """
+        ...
+
+    def successors(self, state: Any) -> Iterator[tuple]:
+        """
+        Get all successor states of a given state, along their corresponding actions and cost.
+
+        Parameters
+        ----------
+        state : Any
+            State for which successors are to be generated.
 
         Returns
         -------
-        List[Tuple]
-        A list of tuples, where each tuple is a triplet (state, action, action_cost), corresponding
-        to a successor state; 'state' is the state of the successor, 'action' is the action
-        required to get to that state from the parent state, and 'action_cost' is the cost  of
-        expanding to the successor state from the parent state via the given action.
+        Iterator[tuple]
+            Each tuple is a triplet (state, action, action_cost), corresponding
+            to a successor state; 'state' is the state of the successor, 'action' is the action
+            required to get to that state from the parent state, and 'action_cost' is the cost of
+            expanding to the successor state from the parent state via the given action.
         """
+        for action in self.actions(state=state):
+            successor_state = self.result(state=state, action=action)
+            cost = self.cost_action(start_state=state, action=action, end_state=successor_state)
+            yield action, successor_state, cost
+        return
 
-        def actions(state) -> List[Any]:
-            """
-            Given a state, return a list of actions that can be executed in that state.
-            """
-            raise NotImplementedError
-
-        def result(state, action) -> Any:
-            """
-            Given a state and an action executable in that state, return the resulting state.
-            """
-            raise NotImplementedError
-
-        def cost(start_state, action, end_state) -> float:
-            """
-            Return the numeric cost of applying the `action` in `start_state` to reach `end_state`.
-            """
-            raise NotImplementedError
-
-        avail_actions = actions(state)
-        successors = []
-        for action in avail_actions:
-            end_state = result(state, action)
-            successors.append((end_state, action, cost(state, action, end_state)))
-        return successors
-
-    def cost_actions(self, actions) -> float:
+    def heuristic(self, state: Any) -> float:
         """
-         actions: A list of actions to take
+        Calculate the heuristic value of a given state.
 
-        This method returns the total cost of a particular sequence of actions.
-        The sequence must be composed of legal moves.
+        Parameters
+        ----------
+        state : Any
+            State for which the heuristic value should be calculated.
+
+        Returns
+        -------
+        float
+            The heuristic value of the given state.
         """
-        raise NotImplementedError
-
-    def heuristic(self, state) -> float:
-        raise NotImplementedError
+        return 0
