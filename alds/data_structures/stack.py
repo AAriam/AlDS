@@ -1,55 +1,43 @@
 """Module containing node structures."""
 
-from typing import Any, Callable
+from typing import Any, Callable, Optional
 
 
 class Stack:
     """
-    A data container with a last-in-first-out (LIFO) queuing policy.
-
-    Methods
-    -------
-    push
-        Push a new object into the stack.
-
-    pop
-        Remove the last pushed object from the stack and return it.
-
-    Attributes
-    ----------
-    is_empty : bool
-        Whether the stack is empty or not.
+    A data structure with a last-in-first-out (LIFO) queuing policy.
     """
-    def __init__(self, init_stack: list = None):
+
+    def __init__(self, init_stack: Optional[list] = None):
         """
-        Initialize a new stack, either empty or with some initial objects.
+        Initialize a new stack, either empty or with an initial number of element.
 
         Parameters
         ----------
-        init_stack : List (optional; default: None)
-            An initial list of objects to add to the stack. Objects will be added to/popped from
+        init_stack : list, default: None
+            An initial list of elements to add to the stack. Elements will be added to/popped from
             the end of the list.
         """
         if init_stack is None:
             self._data = []
-        elif type(init_stack) is list:
+        elif isinstance(init_stack, list):
             self._data = init_stack
         else:
-            raise TypeError("Type of `init_stack` should be `list`.")
+            raise TypeError("Argument `init_stack` must be of type `list`.")
         return
 
     def __str__(self):
-        copy = self._data.copy()
-        copy.reverse()
-        return str(copy)
+        elements = self._data.copy()
+        elements.reverse()
+        return [str(elem) for elem in elements]
 
-    def push(self, obj: Any) -> None:
+    def push(self, element: Any) -> None:
         """Add a new element to the stack."""
-        self._data.append(obj)
+        self._data.append(element)
         return
 
     def pop(self) -> Any:
-        """Pop the most recently pushed item from the stack."""
+        """Pop the most recently pushed element from the stack."""
         return self._data.pop()
 
     @property
@@ -59,10 +47,25 @@ class Stack:
 
     @property
     def is_empty(self) -> bool:
-        """Whether the stack is empty or not."""
+        """Whether the stack is empty."""
         return len(self._data) == 0
 
     def has_element(self, elem: Any, key: Callable = lambda elem: elem) -> bool:
+        """
+        Whether a given element is present in the stack.
+
+        Parameters
+        ----------
+        elem : Any
+            The element to be checked.
+        key : Callable, default: lambda elem: elem
+            A function that inputs an element in the stack, and returns the value that must be
+            checked against the argument `elem`.
+
+        Returns
+        -------
+        bool
+        """
         for e in self._data:
             if key(e) == elem:
                 return True
