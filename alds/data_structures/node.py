@@ -1,13 +1,13 @@
 """Module containing node structures."""
 
 from __future__ import annotations
-from typing import Any, Generator, Callable
+from collections.abc import Iterator
+from typing import Any
 from dataclasses import dataclass
+from alds.search.abc import SearchProblem
 
-import numpy as np
 
-
-@dataclass
+@dataclass(frozen=True, slots=True)
 class Node:
     """
     A Node in a search tree.
@@ -16,27 +16,32 @@ class Node:
     ----------
     state : Any
         State of the node.
-    action : Any
+    action : Any, default: None
         The action required to get to the node's state from the parent node's state.
-    parent : Node
+    parent : Node, default: None
         The parent node.
-    path_cost : float
+    path_cost : float, default: 0
         The cost of the full path from root to this node. For the root node, this is equal to 0.
         For all other nodes created through the `expand` method, this will be automatically
         assigned as the sum of the parent node's `path_cost` and the cost of the `action` leading
         to this node from the parent node.
+    depth : int, default: 0
+        Depth of the node in the tree. For the root node, this is equal to 0.
+        For all other nodes created through the `expand` method, this will be automatically
+        assigned as the depth of the parent node plus 1.
     """
+
     state: Any
     action: Any = None
     parent: Node = None
     path_cost: float = 0
     depth: int = 0
 
-    def __repr__(self):
+    def __str__(self):
         return str(self.state)
 
     @property
-    def path(self) -> np.ndarray[Any]:
+    def path_actions(self) -> list[Any]:
         """
         The path to this node.
 
@@ -45,10 +50,15 @@ class Node:
         numpy.ndarray
             An array of actions that lead to this node, starting from the root node.
         """
-        return self._path_finder_("action")
+        path = []
+        current_node = self
+        while current_node.parent is not None:
+            path.insert(0, current_node.action)
+            current_node = current_node.parent
+        return path
 
     @property
-    def node_path(self) -> np.ndarray[Node]:
+    def path_states(self) -> list[Any]:
         """
         The tree-path to this node.
 
@@ -57,52 +67,34 @@ class Node:
         numpy.ndarray
             An array of `Node` objects that lead to this node, starting from the root node.
         """
-        return self._path_finder_("node")
+        path = []
+        current_node = self
+        while current_node.parent is not None:
+            path.insert(0, current_node.state)
+            current_node = current_node.parent
+        path.insert(0, current_node.parent)
+        return path
 
-    def expand(self, successors_func: Callable) -> Generator[Node]:
+    def expand(self, search_problem: SearchProblem) -> Iterator[Node]:
         """
         Expand this node.
 
         Parameters
         ----------
-        successors_func : Callable
-            A function that takes a `state` as the only argument,  and returns a list of tuples,
-            each corresponding to a successor state of the input state. Each tuple should contain
-            three elements, corresponding to the state of the successor, the action required to get
-            to that state, and the cost of that action.
-        name_func : Callable (optional)
-            A function that takes a `state` as the only argument,  and returns a string to be used
-            as the node's name.
+        search_problem : SearchProblem
+            A search problem with a `successors` method
+            as described in `alds.search.abc.SearchProblem`.
 
         Returns
         -------
-        Generator[Node]
-            A generator object containing the child nodes as `Node` objects.
+        Iterator[Node]
+            An iterator containing the child nodes as `Node` objects.
         """
-        for state, action, step_cost in successors_func(self.state):
+        for action, successor_state, action_cost in search_problem.successors(self.state):
             yield Node(
-                state=state,
+                state=successor_state,
                 action=action,
                 parent=self,
-                path_cost=step_cost + self.path_cost,
+                path_cost=action_cost + self.path_cost,
                 depth=self.depth + 1
             )
-
-    def _path_finder_(self, path_type):
-        current_node = self
-        path_length = self.depth + (1 if path_type == "node" else 0)
-        path = np.empty(
-            path_length,
-            dtype=object if path_type == "node" else type(self.action)
-        )
-        if path_type == "node":
-            for i in range(1, path_length+1):
-                path[-i] = current_node
-                current_node = current_node.parent
-        elif path_type == "action":
-            for i in range(path_length):
-                path[-i] = current_node.action
-                current_node = current_node.parent
-        else:
-            raise ValueError("`path_type` not recognized.")
-        return path
