@@ -28,17 +28,6 @@ class Queue(ABC):
         ...
 
     @abstractmethod
-    def top(self) -> Any:
-        """Return the top element from the queue (without removing), according to its policy."""
-        ...
-
-    @property
-    @abstractmethod
-    def is_empty(self) -> bool:
-        """Whether the queue is empty."""
-        ...
-
-    @abstractmethod
     def has_element(self, element: Any, key: Callable = lambda elem: elem) -> bool:
         """
         Whether a given element is present in the queue.
@@ -55,3 +44,16 @@ class Queue(ABC):
         -------
         bool
         """
+        ...
+
+    @property
+    @abstractmethod
+    def top(self) -> Any:
+        """Return the top element from the queue (without removing), according to its policy."""
+        ...
+
+    @property
+    @abstractmethod
+    def is_empty(self) -> bool:
+        """Whether the queue is empty."""
+        ...
